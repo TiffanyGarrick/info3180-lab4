@@ -6,8 +6,10 @@ This file creates your application.
 """
 import os
 from app import app
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import Flask,render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.utils import secure_filename
+
+from .forms import UploadForm
 
 
 ###
@@ -28,19 +30,30 @@ def about():
 
 @app.route('/upload', methods=['POST', 'GET'])
 def upload():
+    uploadform=UploadForm()
     if not session.get('logged_in'):
         abort(401)
 
     # Instantiate your form class
-
+    if request.method == 'GET':
+        return render_template('upload.html')
+        
     # Validate file upload on submit
-    if request.method == 'POST':
+    if request.method == 'POST' and uploadform.validate_on_submit():
         # Get file data and save to your uploads folder
+        #uploads = app.config['UPLOAD_FOLDER']
+        #uploaded=uploadform.uploaded.data
 
+        uploads = app.config['UPLOAD_FOLDER']
+        file=request.files['photo']
+        filename=secure_filename(file.filename)
+        file.save(os.path.join(uploads, filename)) 
+
+        
         flash('File Saved', 'success')
         return redirect(url_for('home'))
 
-    return render_template('upload.html')
+    return render_template('upload.html')#, filename=uploads)
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -73,9 +86,7 @@ def flash_errors(form):
     for field, errors in form.errors.items():
         for error in errors:
             flash(u"Error in the %s field - %s" % (
-                getattr(form, field).label.text,
-                error
-), 'danger')
+                getattr(form, field).label.text,error), 'danger')
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
