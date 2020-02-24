@@ -21,6 +21,10 @@ def home():
     """Render website's home page."""
     return render_template('home.html')
 
+@app.route('/files')
+def files():
+    """Render website's file page."""
+    return render_template('files.html')
 
 @app.route('/about/')
 def about():
